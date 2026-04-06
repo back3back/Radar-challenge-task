@@ -9,6 +9,9 @@
 """
 
 import numpy as np
+import matplotlib
+matplotlib.rcParams['font.sans-serif'] = ['SimHei']          # 使用黑体
+matplotlib.rcParams['axes.unicode_minus'] = False             # 解决负号显示问题
 import matplotlib.pyplot as plt
 
 
@@ -27,7 +30,7 @@ def generate_echo_signal(f0, t, target_angle, num_rx, d, c):
     返回:
         echo_signals: 各阵元的回波信号 (复数基带)
     """
-    wavelength = c / f0
+    wavelength = c / f0 # 波长
 
     # 各阵元的回波信号 (考虑波程差引入的相位差)
     # 注意：相位是相对于第一个阵元的
@@ -57,8 +60,10 @@ def fft_angle_estimation(echo_signals, wavelength, d):
     compressed_signals = np.zeros(num_rx, dtype=complex)
     for n in range(num_rx):
         compressed_signals[n] = np.sum(echo_signals[n, :])
+    # compressed_signals = echo_signals[:, 0] 
 
     # 空间 FFT
+    # 匹配滤波器，用256种假设的角度去匹配当前的数据
     n_fft = 256
     angle_spectrum = np.abs(np.fft.fft(compressed_signals, n_fft))
     angle_spectrum = np.fft.fftshift(angle_spectrum)
@@ -85,6 +90,7 @@ def phase_angle_estimation(echo_signals, wavelength, d):
     compressed_signals = np.zeros(num_rx, dtype=complex)
     for n in range(num_rx):
         compressed_signals[n] = np.sum(echo_signals[n, :])
+    # compressed_signals = echo_signals[:, 0] 
 
     # 计算相邻阵元间的相位差
     phase_diffs = np.zeros(num_rx - 1)
@@ -180,14 +186,14 @@ def main():
     fft_angle, angle_spectrum, sin_theta = fft_angle_estimation(echo_signals, wavelength, d)
 
     print(f"\nFFT 测角结果:")
-    print(f"  估计角度：{np.rad2deg(fft_angle):.2f} 度")
+    print(f"  估计角度：{np.rad2deg(fft_angle):.4f} 度")
     print(f"  角度误差：{np.rad2deg(fft_angle - target_angle):.4f} 度")
 
     # ========== 相位法测角 ==========
     phase_angle, phase_diffs = phase_angle_estimation(echo_signals, wavelength, d)
 
     print(f"\n相位法测角结果:")
-    print(f"  估计角度：{np.rad2deg(phase_angle):.2f} 度")
+    print(f"  估计角度：{np.rad2deg(phase_angle):.4f} 度")
     print(f"  角度误差：{np.rad2deg(phase_angle - target_angle):.4f} 度")
     print(f"  相邻阵元相位差：{np.rad2deg(phase_diffs)}")
 
